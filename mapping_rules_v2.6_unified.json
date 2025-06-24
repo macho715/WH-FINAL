@@ -1,0 +1,25 @@
+{
+  "version": "2.6-unified",
+  "description": "HVDC Warehouse Ontology Mapping Rules - 표준 v2.5 + 실제 데이터 통합",
+  "namespaces": {
+    "ex": "http://example.org/hvdc#",
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
+  },
+  "field_map": {
+    "CBM": "hasVolume",
+    "Shipment Invoice No.": "hasShipmentNo",
+    "Site": "hasSite",
+    "EQ No": "hasEquipmentNo",
+    "Case No.": "hasCaseNo",
+    "Description": "hasDescription",
+    "Price": "hasAmount",
+    "Vessel": "hasVessel",
+    "POL": "hasPortOfLoading",
+    "POD": "hasPortOfDischarge",
+    "DSV Indoor": "hasDSVIndoor",
+    "DSV Al Markaz": "hasDSVAlMarkaz",
+    "DSV Outdoor": "hasDSVOutdoor",
+    "DAS": "hasDAS"
+  }
+}

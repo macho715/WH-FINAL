@@ -1,0 +1,32 @@
+{
+  "namespaces": {
+    "ex": "http://example.org/hvdc#",
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
+  },
+  "field_map": {
+    "Shipment Invoice No.": "hasShipmentNo",
+    "SCT Ref.No": "hasSCTRef",
+    "Site": "hasSite",
+    "EQ No": "hasEquipmentNo",
+    "Case No.": "hasCaseNo",
+    "Description": "hasDescription",
+    "Price": "hasAmount",
+    "CBM": "hasVolume",
+    "N.W(kgs)": "hasNetWeight",
+    "G.W(kgs)": "hasGrossWeight",
+    "Currency": "hasCurrency",
+    "Vessel": "hasVessel",
+    "POL": "hasPortOfLoading",
+    "POD": "hasPortOfDischarge",
+    "ETD/ATD": "hasETD",
+    "ETA/ATA": "hasETA",
+    "DSV Indoor": "hasDSVIndoor",
+    "DSV Al Markaz": "hasDSVAlMarkaz",
+    "DSV Outdoor": "hasDSVOutdoor",
+    "DAS": "hasDAS",
+    "Status_Current": "hasCurrentStatus",
+    "Status_Location ": "hasLocation",
+    "Storage": "hasStorageType"
+  }
+}
