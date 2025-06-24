@@ -6,7 +6,7 @@ import pathlib as pl
 
 # 핵심 모듈 임포트
 from config import load_expected_stock
-from core.inventory_engine import validate_transfer_pairs, validate_date_sequence
+from core.deduplication import validate_transfer_pairs_fixed as validate_transfer_pairs, validate_date_sequence_fixed as validate_date_sequence
 from core.deduplication import drop_duplicate_transfers, reconcile_orphan_transfers
 from core.loader import DataLoader
 
