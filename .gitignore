@@ -1,0 +1,75 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environment
+venv/
+env/
+ENV/
+.venv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Excel temporary files
+~$*.xlsx
+~$*.xls
+*.tmp
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# pytest
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Project specific
+*.zip
+rdf_output/
+*.log
+temp/
+tmp/
+
+# Large test files (but keep sample data)
+!data/HVDC*.xlsx
+
+# Backup files
+*_backup.*
+*.bak
+BACKUP_*
+
+# Korean reports (temporary)
+*한국어*.xlsx
+*테스트리포트*.xlsx 
