@@ -1,0 +1,33 @@
+{
+  "version": "2.5",
+  "description": "HVDC Warehouse Ontology Mapping Rules – hasAmount 추가 포함",
+  "namespaces": {
+    "ex": "http://example.com/hvdc#",
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
+  },
+  "field_map": {
+    "Operation Month": "hasDate",
+    "Shipment No": "hasCase",
+    "Category": "hasStorageType",
+    "CNTR Unstuffing Q'TY": "hasQuantity",
+    "CNTR Stuffing Q'TY": "hasQuantity",
+    "pkgs": "hasPackageCount",
+    "Weight (kg)": "hasWeight",
+    "CBM": "hasVolume",
+    "TOTAL": "hasAmount",      
+    "Amount": "hasAmount"      
+  },
+  "datatype_properties": [
+    "hasDate",
+    "hasQuantity",
+    "hasPackageCount",
+    "hasWeight",
+    "hasVolume",
+    "hasAmount"                  
+  ],
+  "class_map": {
+    "Outdoor": "OutdoorWarehouse",
+    "Indoor(M44)": "IndoorWarehouseM44"
+  }
+} 
