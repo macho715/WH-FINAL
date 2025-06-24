@@ -1,4 +1,4 @@
-"""excel_reporter.py – v0.5.1 (2025‑06‑24)
+"""quantity_reporter.py – v0.5.1 (2025‑06‑24)
 
 HVDC Warehouse 월별 재무·재고 리포트 생성기
 =========================================
@@ -97,7 +97,7 @@ def generate_full_dashboard(raw_df: pd.DataFrame, output_path: Union[str, Path] 
 
 if __name__ == "__main__":
     import argparse
-    from warehouse_loader import load_hvdc_warehouse_file
+    from core.mapping import load_hvdc_warehouse_file
 
     parser = argparse.ArgumentParser(description="Generate HVDC Warehouse financial report")
     parser.add_argument("excel", help="Raw HVDC Warehouse Excel file path")

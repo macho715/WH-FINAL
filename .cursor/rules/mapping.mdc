@@ -1,0 +1,6 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+온온톨로지 데이터 → 필드 매핑 → 변환/정규화 → BI 분석

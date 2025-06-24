@@ -1,11 +1,15 @@
 import os
+import sys
 import pandas as pd
 import pytest
 
+# 상위 디렉토리를 Python 경로에 추가
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 # 단계별 엔진 import
 from core.inventory_engine import InventoryEngine
-from excel_reporter import generate_financial_report
-from ontology_mapper import dataframe_to_rdf  # 가정: DataFrame→RDF 함수
+from reporter.quantity_reporter import generate_financial_report
+from reporter.ontology_reporter import dataframe_to_rdf  # 가정: DataFrame→RDF 함수
 
 
 def _sample_df():

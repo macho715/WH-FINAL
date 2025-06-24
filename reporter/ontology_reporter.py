@@ -30,7 +30,7 @@ __all__ = ["dataframe_to_rdf"]
 # ---------------------------------------------------------------------------
 # 매핑 룰 로드
 # ---------------------------------------------------------------------------
-_DEFAULT_RULE_PATH = Path(__file__).with_suffix("").parent / "mapping_rules_v2.5.json"
+_DEFAULT_RULE_PATH = Path(__file__).parent.parent / "mapping_rules_v2.5.json"
 
 with open(_DEFAULT_RULE_PATH, "r", encoding="utf-8") as f:
     _RULES: Dict[str, Any] = json.load(f)

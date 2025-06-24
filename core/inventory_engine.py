@@ -1,84 +1,181 @@
-"""inventory_engine.py – v0.4 (2025‑06‑24)
-
-HVDC Warehouse 재고·금액 집계 엔진
-=================================
-* 주요 변경
-  - **Amount 합계**를 포함한 `calculate_monthly_summary()` 구현.
-  - `Incoming`·`Outgoing`·`Inventory` 집계와 함께 월간 **Total_Amount** 반환.
-  - Billing month 자동 파싱(`to_datetime`) + xls 템플릿 호환 컬럼 별칭 지원.
-
-Note
-----
-이 모듈은 전처리된 DataFrame(표준 컬럼: `Incoming`, `Outgoing`, `Inventory`, `Amount`, `Billing month`) 을 입력으로 받아
-일/월별 KPI를 계산한다. 외부 모듈(`warehouse_loader.py`, `deduplication.py`)에서 전처리가 완료된 후 호출되는 것을 전제로 한다.
+"""
+HVDC Warehouse Inventory Engine
+==============================
+runner/run_quantity_report.py의 calculate_daily_inventory 함수를 기반으로 추출
 """
 from __future__ import annotations
 
 import pandas as pd
-from typing import Tuple
+from typing import Dict, Any, Optional
+from datetime import datetime
 
 
 class InventoryEngine:
-    """재고 및 금액 집계 전용 엔진."""
-
+    """수량 중심 재고·입출고·월간 KPI 계산 엔진"""
+    
     def __init__(self, df: pd.DataFrame):
-        # 내부 복사본 보존 – 후속 처리 안전
+        """
+        초기화
+        
+        Args:
+            df: 표준화된 재고 데이터프레임
+        """
         self.df = df.copy()
-        required_cols = {"Incoming", "Outgoing", "Amount", "Billing month"}
-        missing = required_cols - set(self.df.columns)
-        if missing:
-            raise ValueError(f"Missing required columns: {missing}")
-
-    # ------------------------------------------------------------------
-    # Daily Inventory (단순 누적)
-    # ------------------------------------------------------------------
-    def calculate_daily_inventory(self) -> pd.DataFrame:
-        """prev + Incoming – Outgoing 계산 후 `Inventory` 컬럼 반환."""
-        self.df = self.df.sort_values("Start")  # 날짜순 보장
-        self.df["Inventory"] = (self.df["Incoming"].fillna(0) - self.df["Outgoing"].fillna(0)).cumsum()
-        return self.df
-
-    # ------------------------------------------------------------------
-    # Monthly Summary with Amount
-    # ------------------------------------------------------------------
+        self._prepare_data()
+    
+    def _prepare_data(self) -> None:
+        """데이터 전처리"""
+        # 기본 컬럼 확인 및 생성
+        required_cols = ['Incoming', 'Outgoing', 'Inventory', 'Amount', 'Billing month']
+        for col in required_cols:
+            if col not in self.df.columns:
+                if col == 'Incoming':
+                    self.df[col] = self.df.get('cntr_q_in', 0)
+                elif col == 'Outgoing':
+                    self.df[col] = self.df.get('cntr_q_out', 0)
+                elif col == 'Inventory':
+                    self.df[col] = self.df.get('Incoming', 0) - self.df.get('Outgoing', 0)
+                elif col == 'Amount':
+                    self.df[col] = self.df.get('amount', 0)
+                elif col == 'Billing month':
+                    self.df[col] = self.df.get('billing_month', pd.Timestamp.now())
+                else:
+                    self.df[col] = 0
+        
+        # 날짜 정규화
+        self.df['Billing month'] = pd.to_datetime(self.df['Billing month'])
+        
+        # 숫자 컬럼 정규화
+        numeric_cols = ['Incoming', 'Outgoing', 'Inventory', 'Amount']
+        for col in numeric_cols:
+            self.df[col] = pd.to_numeric(self.df[col], errors='coerce').fillna(0)
+    
     def calculate_monthly_summary(self) -> pd.DataFrame:
-        """Billing month 별 KPI + Total_Amount 반환."""
-        # Billing month 파싱 → PeriodIndex(M)
-        billing_dt = pd.to_datetime(self.df["Billing month"], errors="coerce")
-        if billing_dt.isna().any():
-            raise ValueError("Billing month parsing failed for some rows.")
-        self.df["billing_period"] = billing_dt.dt.to_period("M")
-
-        agg_df = (
-            self.df.groupby("billing_period").agg(
-                Incoming=("Incoming", "sum"),
-                Outgoing=("Outgoing", "sum"),
-                End_Inventory=("Inventory", "last"),
-                Total_Amount=("Amount", "sum"),
-            )
-        )
-
-        return agg_df.reset_index().rename(columns={"billing_period": "Billing Month"})
-
-
-# ----------------------------------------------------------------------
-# Demo CLI (python -m inventory_engine <excel_path>)
-# ----------------------------------------------------------------------
-if __name__ == "__main__":
-    import sys
-    from warehouse_loader import load_hvdc_warehouse_file
-
-    if len(sys.argv) != 2:
-        sys.exit("Usage: python -m inventory_engine <excel_path>")
-
-    path = sys.argv[1]
-    df_original = load_hvdc_warehouse_file(path)
-    engine = InventoryEngine(df_original)
-    df_daily = engine.calculate_daily_inventory()
-    df_monthly = engine.calculate_monthly_summary()
-
-    print("--- Daily Inventory (tail) ---")
-    print(df_daily.tail())
-
-    print("\n--- Monthly Summary ---")
-    print(df_monthly) 
+        """월별 재고 요약 계산 - test_inventory_amount.py 기반"""
+        # 월별 그룹화
+        monthly = self.df.groupby(pd.Grouper(key='Billing month', freq='M')).agg({
+            'Incoming': 'sum',
+            'Outgoing': 'sum', 
+            'Inventory': 'last',  # 기말재고
+            'Amount': 'sum'
+        }).reset_index()
+        
+        # 컬럼명 정리
+        monthly.columns = ['Billing Month', 'Incoming', 'Outgoing', 'End_Inventory', 'Total_Amount']
+        
+        # 추가 KPI 계산
+        monthly['Net_Change'] = monthly['Incoming'] - monthly['Outgoing']
+        monthly['Turnover_Rate'] = monthly['Outgoing'] / monthly['End_Inventory'].replace(0, 1)
+        
+        return monthly
+    
+    def calculate_daily_inventory(self) -> pd.DataFrame:
+        """일별 재고 계산 - runner/run_quantity_report.py의 함수 기반"""
+        transaction_df = self.df.copy()
+        
+        if transaction_df.empty:
+            print("❌ 계산할 트랜잭션이 없습니다")
+            return pd.DataFrame()
+        
+        # 날짜별, 위치별 집계
+        transaction_df['Date'] = pd.to_datetime(transaction_df.get('Date', transaction_df.get('Billing month'))).dt.date
+        
+        daily_summary = transaction_df.groupby(['Location', 'Date', 'TxType_Refined']).agg({
+            'Qty': 'sum'
+        }).reset_index() if 'Location' in transaction_df.columns else pd.DataFrame()
+        
+        if daily_summary.empty:
+            return pd.DataFrame()
+        
+        # 피벗으로 입고/출고 분리
+        daily_pivot = daily_summary.pivot_table(
+            index=['Location', 'Date'],
+            columns='TxType_Refined', 
+            values='Qty',
+            fill_value=0
+        ).reset_index()
+        
+        # 컬럼명 정리
+        daily_pivot.columns.name = None
+        expected_cols = ['IN', 'TRANSFER_OUT', 'FINAL_OUT']
+        for col in expected_cols:
+            if col not in daily_pivot.columns:
+                daily_pivot[col] = 0
+        
+        # 재고 계산 (위치별 누적)
+        stock_records = []
+        
+        for location in daily_pivot['Location'].unique():
+            if location in ['UNKNOWN', 'UNK', '']:
+                continue
+                
+            loc_data = daily_pivot[daily_pivot['Location'] == location].copy()
+            loc_data = loc_data.sort_values('Date')
+            
+            opening_stock = 0
+            
+            for _, row in loc_data.iterrows():
+                inbound = row.get('IN', 0)
+                transfer_out = row.get('TRANSFER_OUT', 0) 
+                final_out = row.get('FINAL_OUT', 0)
+                total_outbound = transfer_out + final_out
+                
+                closing_stock = opening_stock + inbound - total_outbound
+                
+                stock_records.append({
+                    'Location': location,
+                    'Date': row['Date'],
+                    'Opening_Stock': opening_stock,
+                    'Inbound': inbound,
+                    'Transfer_Out': transfer_out,
+                    'Final_Out': final_out,
+                    'Total_Outbound': total_outbound,
+                    'Closing_Stock': closing_stock
+                })
+                
+                opening_stock = closing_stock
+        
+        daily_stock_df = pd.DataFrame(stock_records)
+        
+        return daily_stock_df
+    
+    def validate_inventory_results(self, expected: Dict[str, int]) -> Dict[str, Any]:
+        """재고 결과 검증"""
+        daily_stock = self.calculate_daily_inventory()
+        
+        if daily_stock.empty:
+            return {'error': '재고 데이터가 없습니다'}
+        
+        latest_stock = daily_stock.groupby('Location')['Closing_Stock'].last()
+        
+        validation_results = {
+            'total_matches': 0,
+            'total_expected': len(expected),
+            'mismatches': [],
+            'summary': {}
+        }
+        
+        for location, expected_qty in expected.items():
+            actual_qty = latest_stock.get(location, 0)
+            is_match = abs(actual_qty - expected_qty) <= 2  # 허용 오차 2
+            
+            validation_results['summary'][location] = {
+                'expected': expected_qty,
+                'actual': actual_qty,
+                'match': is_match,
+                'difference': actual_qty - expected_qty
+            }
+            
+            if is_match:
+                validation_results['total_matches'] += 1
+            else:
+                validation_results['mismatches'].append({
+                    'location': location,
+                    'expected': expected_qty,
+                    'actual': actual_qty,
+                    'difference': actual_qty - expected_qty
+                })
+        
+        validation_results['pass_rate'] = (validation_results['total_matches'] / validation_results['total_expected']) * 100
+        
+        return validation_results 

@@ -1,6 +1,11 @@
+import os
+import sys
 import pandas as pd
 import pytest
 from datetime import datetime
+
+# 상위 디렉토리를 Python 경로에 추가
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # 클래스 import 경로
 from core.inventory_engine import InventoryEngine
